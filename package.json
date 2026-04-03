@@ -1,0 +1,33 @@
+{
+  "name": "air-studio-llm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local desktop MVP for chatting with curated open-source language models",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev:renderer\" \"npm run dev:electron:build\" \"npm run dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron:build": "tsc -p tsconfig.electron.json -w",
+    "dev:electron": "wait-on http://127.0.0.1:5173 dist-electron/main.js && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron dist-electron/main.js",
+    "build": "npm run build:renderer && npm run build:electron",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.2.0",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.18",
+    "wait-on": "^8.0.3"
+  }
+}
