@@ -49,8 +49,6 @@ Important:
 
 AirLLM supported in this MVP:
 
-- Qwen2.5-0.5B-Instruct
-- Qwen2.5-1.5B-Instruct
 - Qwen2.5-3B-Instruct
 
 AirLLM experimental in this MVP:
@@ -60,6 +58,8 @@ AirLLM experimental in this MVP:
 
 Mock-only in this MVP:
 
+- Qwen2.5-0.5B-Instruct
+- Qwen2.5-1.5B-Instruct
 - Qwen2.5-32B-Instruct
 - Llama-3.2-1B-Instruct
 - Llama-3.2-3B-Instruct
@@ -179,6 +179,11 @@ AirLLM mode blocks a model you can still see in the catalog:
 
 - That is expected for `mock_only` entries when `AIR_STUDIO_INFERENCE_MODE=airllm`.
 - Use `auto` or `mock` if you want those curated entries to remain usable in the MVP.
+
+AirLLM load fails saying `model.safetensors.index.json should exist`:
+
+- That model repo likely uses a single safetensors file instead of the sharded layout the current AirLLM path expects.
+- In this MVP, prefer `Qwen2.5-3B-Instruct` first, then try `Qwen2.5-7B-Instruct` or `Qwen2.5-14B-Instruct` if your machine has enough memory.
 
 ## Known limitations
 

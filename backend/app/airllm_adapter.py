@@ -38,7 +38,7 @@ def check_airllm_runtime() -> AirLLMRuntimeCheck:
     versions = _build_versions()
     install_commands = [
         "cd C:\\Users\\Dan\\Documents\\air-studio-llm\\backend",
-        'python -m pip install --upgrade --force-reinstall "optimum<2" "transformers<4.49"',
+        'python -m pip install --upgrade --force-reinstall "optimum<2" "transformers<4.49" sentencepiece',
     ]
     restart_command = '$env:AIR_STUDIO_INFERENCE_MODE="airllm"; npm run dev'
 
@@ -199,6 +199,21 @@ def _friendly_airllm_error(action: str, error: Exception) -> str:
     raw = str(error).strip() or type(error).__name__
     normalized = raw.lower()
 
+    if (
+        "proxyerror" in normalized
+        or "unable to connect to proxy" in normalized
+        or "127.0.0.1', port=9" in normalized
+        or "127.0.0.1:9" in normalized
+    ):
+        return (
+            f"AirLLM {action} failed because Hugging Face access is being routed through a broken proxy "
+            "setting. Clear HTTP_PROXY/HTTPS_PROXY/ALL_PROXY in the shell, then restart the app."
+        )
+    if "huggingface.co" in normalized and "max retries exceeded" in normalized:
+        return (
+            f"AirLLM {action} failed because the backend could not reach Hugging Face to read model files. "
+            "Check your internet connection and any proxy settings, then try again."
+        )
     if "out of memory" in normalized or "oom" in normalized:
         return (
             f"AirLLM {action} failed, likely because the model did not fit in available memory. "
@@ -208,6 +223,11 @@ def _friendly_airllm_error(action: str, error: Exception) -> str:
         return (
             f"AirLLM {action} failed because the model repository could not be accessed. "
             "This may require Hugging Face access that this MVP does not configure."
+        )
+    if "model.safetensors.index.json should exist" in normalized:
+        return (
+            f"AirLLM {action} failed because this model repo does not expose the sharded "
+            "safetensors index file expected by the current AirLLM loader. Try another curated AirLLM model."
         )
     if "config" in normalized and "missing" in normalized:
         return f"AirLLM {action} failed because the selected model configuration is incomplete."

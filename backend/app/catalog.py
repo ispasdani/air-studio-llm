@@ -14,8 +14,8 @@ MODEL_CATALOG = [
         "chat_suitability": "Light chat",
         "hardware_hint": "Great for low-memory laptops",
         "size_tier": "Small models",
-        "compatibility": "supported",
-        "notes": "Best first AirLLM try for low-memory systems.",
+        "compatibility": "mock_only",
+        "notes": "Kept in the catalog, but this repo uses a single safetensors file and does not match the current AirLLM loader expectation.",
         "low_memory_recommended": True,
         "backend_settings": {
             "airllm_repo_id": "Qwen/Qwen2.5-0.5B-Instruct",
@@ -33,8 +33,8 @@ MODEL_CATALOG = [
         "chat_suitability": "General chat",
         "hardware_hint": "Friendly for most modern laptops",
         "size_tier": "Small models",
-        "compatibility": "supported",
-        "notes": "Recommended balance of capability and setup friction for AirLLM.",
+        "compatibility": "mock_only",
+        "notes": "Kept in the catalog, but this repo uses a single safetensors file and does not match the current AirLLM loader expectation.",
         "low_memory_recommended": True,
         "backend_settings": {
             "airllm_repo_id": "Qwen/Qwen2.5-1.5B-Instruct",
@@ -91,7 +91,7 @@ MODEL_CATALOG = [
         "hardware_hint": "Good entry point for local use",
         "size_tier": "Mid-size models",
         "compatibility": "supported",
-        "notes": "Good next step after the tiny Qwen models if your machine has more headroom.",
+        "notes": "First realistic AirLLM candidate in this catalog because the repo exposes the sharded safetensors index AirLLM expects.",
         "low_memory_recommended": False,
         "backend_settings": {
             "airllm_repo_id": "Qwen/Qwen2.5-3B-Instruct",
