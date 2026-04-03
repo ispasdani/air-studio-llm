@@ -185,6 +185,29 @@ h1 {
   color: #15603d;
 }
 
+.tag-compatibility.tag-supported,
+.tag-adapter.tag-airllm {
+  background: #def4e7;
+  color: #15603d;
+}
+
+.tag-compatibility.tag-experimental {
+  background: #fff4db;
+  color: #8b6514;
+}
+
+.tag-compatibility.tag-mock_only,
+.tag-adapter.tag-mock {
+  background: #edf1f8;
+  color: #36537a;
+}
+
+.tag-compatibility.tag-unavailable,
+.tag-adapter.tag-unavailable {
+  background: #f7e8e5;
+  color: #8f3a2f;
+}
+
 .detail-grid {
   margin-top: 18px;
   display: grid;
@@ -209,6 +232,13 @@ h1 {
 
 .inline-note {
   margin-top: 16px;
+}
+
+.inline-note-block {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .primary-button,
@@ -240,6 +270,38 @@ h1 {
   border-radius: 14px;
   background: #fff0ee;
   color: #8f3a2f;
+}
+
+.setup-card {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff7e8;
+  border: 1px solid #efd8a5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-card p {
+  color: #6f5a24;
+}
+
+.setup-command-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-command {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #3f3a28;
+  border: 1px solid #eadfc1;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .chat-card {

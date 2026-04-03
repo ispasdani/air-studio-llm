@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { GenerateResponse, HealthResponse, LogEntry, ModelEntry, SystemInfo } from "./types";
+import { BackendState, GenerateResponse, HealthResponse, LogEntry, ModelEntry, SystemInfo } from "./types";
 
 type ChatMessage = {
   id: string;
@@ -10,7 +10,11 @@ type ChatMessage = {
 const POLL_MS = 1500;
 
 function formatStatusLabel(status: string) {
-  return status.replaceAll("_", " ");
+  return status.split("_").join(" ");
+}
+
+function formatCompatibilityLabel(status: string) {
+  return status === "mock_only" ? "mock only" : formatStatusLabel(status);
 }
 
 export default function App() {
@@ -157,6 +161,8 @@ export default function App() {
     [models]
   );
 
+  const activeAdapter = health?.active_adapter ?? activeModel?.resolved_adapter ?? null;
+
   const groupedModels = useMemo(() => {
     return models.reduce<Record<string, ModelEntry[]>>((groups, model) => {
       if (!groups[model.size_tier]) {
@@ -168,6 +174,7 @@ export default function App() {
   }, [models]);
 
   const chatDisabled = !activeModel || sendPending || loadPending;
+  const setupHint = selectedModel?.setup_hint ?? health?.airllm_setup_hint ?? null;
 
   async function handleLoadModel() {
     if (!selectedModel) {
@@ -318,6 +325,16 @@ export default function App() {
                         <span>{model.family}</span>
                         <span>{model.size_label}</span>
                         <span>{model.chat_suitability}</span>
+                        <span className={`tag-compatibility tag-${model.compatibility}`}>
+                          {formatCompatibilityLabel(model.compatibility)}
+                        </span>
+                        <span className={`tag-adapter tag-${model.resolved_adapter}`}>
+                          {model.resolved_adapter === "airllm"
+                            ? "AirLLM"
+                            : model.resolved_adapter === "mock"
+                              ? "Mock"
+                              : "Blocked"}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -339,7 +356,12 @@ export default function App() {
                   type="button"
                   className="primary-button"
                   onClick={handleLoadModel}
-                  disabled={!selectedModel || loadPending || selectedModel?.availability === "loading"}
+                  disabled={
+                    !selectedModel ||
+                    loadPending ||
+                    selectedModel?.availability === "loading" ||
+                    selectedModel?.load_disabled
+                  }
                 >
                   {loadPending ? "Working..." : "Load"}
                 </button>
@@ -369,6 +391,10 @@ export default function App() {
                   <strong>{selectedModel.size_label}</strong>
                 </div>
                 <div>
+                  <span className="detail-label">Task</span>
+                  <strong>{selectedModel.task_type}</strong>
+                </div>
+                <div>
                   <span className="detail-label">Chat fit</span>
                   <strong>{selectedModel.chat_suitability}</strong>
                 </div>
@@ -380,9 +406,35 @@ export default function App() {
                   <span className="detail-label">Status</span>
                   <strong>{formatStatusLabel(selectedModel.availability)}</strong>
                 </div>
+                <div>
+                  <span className="detail-label">Compatibility</span>
+                  <strong>{formatCompatibilityLabel(selectedModel.compatibility)}</strong>
+                </div>
+                <div>
+                  <span className="detail-label">Adapter</span>
+                  <strong>
+                    {selectedModel.resolved_adapter === "airllm"
+                      ? "AirLLM"
+                      : selectedModel.resolved_adapter === "mock"
+                        ? "Mock"
+                        : "Unavailable"}
+                  </strong>
+                </div>
+                <div>
+                  <span className="detail-label">Low-memory fit</span>
+                  <strong>{selectedModel.low_memory_recommended ? "Recommended" : "No"}</strong>
+                </div>
                 <div className="detail-span">
                   <span className="detail-label">Summary</span>
                   <p>{selectedModel.description}</p>
+                </div>
+                <div className="detail-span">
+                  <span className="detail-label">Notes</span>
+                  <p>{selectedModel.notes}</p>
+                </div>
+                <div className="detail-span">
+                  <span className="detail-label">Load path</span>
+                  <p>{selectedModel.resolved_adapter_reason}</p>
                 </div>
               </div>
             ) : (
@@ -390,9 +442,44 @@ export default function App() {
             )}
 
             {health ? (
-              <p className="inline-note">
-                Active model: <strong>{health.active_model_name ?? "None"}</strong>
-              </p>
+              <div className="inline-note-block">
+                <p className="inline-note">
+                  Active model: <strong>{health.active_model_name ?? "None"}</strong>
+                </p>
+                <p className="inline-note">
+                  Adapter in use:{" "}
+                  <strong>
+                    {activeAdapter ? (activeAdapter === "airllm" ? "AirLLM" : "Mock") : "None"}
+                  </strong>
+                </p>
+                <p className="inline-note">
+                  Preferred mode: <strong>{health.preferred_adapter}</strong>
+                </p>
+                <p className="inline-note">
+                  AirLLM runtime: <strong>{health.airllm_available ? "available" : "unavailable"}</strong>
+                </p>
+                {!health.airllm_available ? <p className="inline-note">{health.airllm_status}</p> : null}
+              </div>
+            ) : null}
+
+            {selectedModel?.setup_required && setupHint ? (
+              <div className="setup-card">
+                <strong>{setupHint.title}</strong>
+                <p>{setupHint.summary}</p>
+                {setupHint.mode_note ? <p>{setupHint.mode_note}</p> : null}
+                <div className="setup-command-group">
+                  <span className="detail-label">Install commands</span>
+                  {setupHint.install_commands.map((command) => (
+                    <code key={command} className="setup-command">
+                      {command}
+                    </code>
+                  ))}
+                </div>
+                <div className="setup-command-group">
+                  <span className="detail-label">Restart command</span>
+                  <code className="setup-command">{setupHint.restart_command}</code>
+                </div>
+              </div>
             ) : null}
 
             {errorMessage ? <p className="error-banner">{errorMessage}</p> : null}
@@ -404,7 +491,7 @@ export default function App() {
                 <h2>Chat</h2>
                 <p>
                   {activeModel
-                    ? `Ready with ${activeModel.display_name}`
+                    ? `Ready with ${activeModel.display_name} via ${activeAdapter === "airllm" ? "AirLLM" : "mock"}`
                     : "Load a model to unlock the chat input."}
                 </p>
               </div>
@@ -422,7 +509,11 @@ export default function App() {
               {messages.length === 0 ? (
                 <div className="empty-state">
                   <strong>No messages yet.</strong>
-                  <p>The mock backend will generate model-specific replies once a model is ready.</p>
+                  <p>
+                    {activeAdapter === "airllm"
+                      ? "Once the model is ready, replies come from the local AirLLM backend."
+                      : "The app is ready to chat with the current mock fallback path."}
+                  </p>
                 </div>
               ) : (
                 messages.map((message) => (
@@ -467,6 +558,10 @@ export default function App() {
                 <div>
                   <span>Python</span>
                   <strong>{systemInfo.python_version}</strong>
+                </div>
+                <div>
+                  <span>Adapter mode</span>
+                  <strong>{health?.preferred_adapter ?? "auto"}</strong>
                 </div>
                 <div>
                   <span>CPU</span>

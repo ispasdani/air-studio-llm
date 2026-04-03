@@ -7,7 +7,7 @@ from .schemas import GenerateRequest, LoadModelRequest
 from .services import ModelService
 from .system_info import get_system_info
 
-app = FastAPI(title="Air Studio LLM Mock Backend", version="0.1.0")
+app = FastAPI(title="Air Studio LLM Backend", version="0.2.0")
 service = ModelService()
 
 app.add_middleware(
@@ -48,7 +48,7 @@ async def load_model(request: LoadModelRequest) -> dict:
 @app.post("/generate")
 async def generate(request: GenerateRequest) -> dict:
     try:
-        return await service.generate(request.prompt, len(request.history))
+        return await service.generate(request.prompt, request.history)
     except RuntimeError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 

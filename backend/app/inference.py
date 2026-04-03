@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class BaseInferenceAdapter(ABC):
     @abstractmethod
-    async def load_model(self, model_name: str) -> None:
+    async def load_model(self, model_config: dict[str, Any]) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -14,22 +15,29 @@ class BaseInferenceAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def generate(self, model_name: str, prompt: str, history_length: int) -> str:
+    async def generate(
+        self, model_config: dict[str, Any], prompt: str, history: list[dict[str, Any]]
+    ) -> str:
         raise NotImplementedError
 
 
 class MockInferenceAdapter(BaseInferenceAdapter):
-    async def load_model(self, model_name: str) -> None:
+    async def load_model(self, model_config: dict[str, Any]) -> None:
+        model_name = model_config["display_name"]
         delay = 1.5 if "0.5B" in model_name or "1B" in model_name else 2.2
         await asyncio.sleep(delay)
 
     async def unload_model(self) -> None:
         await asyncio.sleep(0.3)
 
-    async def generate(self, model_name: str, prompt: str, history_length: int) -> str:
+    async def generate(
+        self, model_config: dict[str, Any], prompt: str, history: list[dict[str, Any]]
+    ) -> str:
         await asyncio.sleep(0.5)
+        model_name = model_config["display_name"]
         prompt_excerpt = prompt.strip().replace("\n", " ")[:140]
         model_style = "calm and concise"
+        history_length = len(history)
 
         if "Qwen" in model_name:
             model_style = "practical and direct"

@@ -1,9 +1,6 @@
 /// <reference types="vite/client" />
 
-type BackendState = {
-  status: "starting" | "ready" | "error" | "stopped";
-  detail: string;
-};
+import type { BackendState } from "./types";
 
 declare global {
   interface Window {
